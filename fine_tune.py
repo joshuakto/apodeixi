@@ -60,7 +60,7 @@ def gen_report(batch_number, running_loss, running_accu, pred, glabel, writer):
 
 if __name__ == '__main__':
 	# data path setting
-	parser = argparse.ArgumentParser()
+	parser = argparse.ArgumentParser(description='Fine tune roberta with stress tests.')
 	test_data_path = '/home/bellman/nlp/roberta/data/MultiNLI_StressTest_Evaluation.jsonl'
 	parser.add_argument('--datadir', default=test_data_path)
 	parser.add_argument('--batchsize', default=1)
@@ -100,14 +100,11 @@ if __name__ == '__main__':
 			batch = collate_tokens(
 				[roberta.encode(pair[0], pair[1])
 				for pair in sen_pairs], pad_idx=1)
-		except:
-			pass
-		logprobs = roberta.predict('mnli', batch)
-		pred = logprobs.argmax(dim=1)
+			logprobs = roberta.predict('mnli', batch)
+			pred = logprobs.argmax(dim=1)
 
-		# Update model using loss function
-		with torch.set_grad_enabled(not(nograd)):
-			try:
+			# Update model using loss function
+			with torch.set_grad_enabled(not(nograd)):
 				dig_labels = extract_labels(df, batch_i, batch_z, label_map)
 				dig_labels = dig_labels.to(device='cuda')
 				logprobs = logprobs.to(device='cuda')
@@ -124,8 +121,16 @@ if __name__ == '__main__':
 						losses, accuracies, args.evalsize)	
 					gen_report(batch_number, running_loss, running_accu,
 						pred.item(), dig_labels.item(), writer)
-			except KeyError:
-				print('Batch{}:index[{}:{}] missing gold label'
-					.format(batch_number, batch_i, batch_z))
+		except ValueError as err:
+			print('Batch{}:index[{}:{}]| ValueError:{}'.format(
+				batch_number, batch_i, batch_z, err))	
+		except KeyError as err:
+			print('Batch{}:index[{}:{}] missing gold label| KeyError:{}'
+				.format(batch_number, batch_i, batch_z, err))
+		except:
+			print('Unexpected error:', sys.exc_info()[:2])
+		if batch_number%10000 == 0:
+			torch.save(roberta.state_dict(),'intermediate_model/{}/{}.pt'
+				.format(args.summarycomment, batch_number))
 	writer.close()
-			
+	torch.save(roberta.state_dict(), 'finetuned_model/finetuned1.pt')	
