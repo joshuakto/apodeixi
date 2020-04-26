@@ -31,6 +31,8 @@ parser.add_argument('--altmodel', default=None)
 
 args = parser.parse_args()
 data = args.data
+runs_cuda = not(args.nocuda)
+device = 'cuda' if runs_cuda else 'cpu'
 
 df = pd.read_json(data, lines = True)
 if args.nocuda:
