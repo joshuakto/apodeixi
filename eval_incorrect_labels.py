@@ -6,7 +6,7 @@ import argparse
 
 def compute_dist(df):
 	count = df.dsource.value_counts()
-	percentage = count/count.sum()
+	percentage = count/count.sum()*100
 	return count, percentage
 
 
@@ -64,7 +64,7 @@ if __name__ == '__main__':
 	smoothed_count_t = interp1d(bin_medians, bin_count_train_l, kind='cubic')
 	smoothed_percent_s = interp1d(bin_medians, bin_percent_stress_l, kind='cubic')	
 	smoothed_percent_t = interp1d(bin_medians, bin_percent_train_l, kind='cubic')     
-	xnew = np.linspace(min(bin_medians), max(bin_medians),num=90000, endpoint=True) 
+	xnew = np.linspace(min(bin_medians), max(bin_medians),num=1000, endpoint=True) 
 	# print(bin_count_train_l     )
 	# print(bin_percent_train_l   )
 	# print(bin_count_stress_l    )
@@ -73,20 +73,25 @@ if __name__ == '__main__':
 	print(overall_count)
 	print(overall_percentage)
 	fig = plt.figure()
-	ax1 = fig.add_subplot(1, 2, 1)
-	ax2 = fig.add_subplot(1, 2, 2)
+	ax1 = fig.add_subplot(1, 1, 1)
 	ax1.plot(bin_medians, bin_count_stress_l, 'o')
 	ax1.plot(xnew, smoothed_count_s(xnew), '--')
 	ax1.plot(bin_medians, bin_count_train_l, 'o')
 	ax1.plot(xnew, smoothed_count_t(xnew), '--')
-	ax1.set_title('count')
+	ax1.set_title('Incorrect Predictions of Dataset(Count)')
+	ax1.set_ylabel('Count')
+	ax1.set_xlabel('Median of bin(bin size=1000)')
 	ax1.legend(['stress_count','stress_count_cubic',
 		'train_count','train_count_cubic'], loc='best')
+	fig2 = plt.figure()
+	ax2 = fig2.add_subplot(1, 1, 1)
 	ax2.plot(bin_medians, bin_percent_stress_l)	
 	ax2.plot(xnew, smoothed_percent_s(xnew), '--')
 	ax2.plot(bin_medians, bin_percent_train_l)	
 	ax2.plot(xnew, smoothed_percent_t(xnew), '--')
-	ax2.set_title('percentage')
+	ax2.set_title('Incorrect Predictions of Dataset(Percentage)')
+	ax2.set_ylabel('Percentage')
+	ax2.set_xlabel('Median of bin(bin size=1000)')
 	ax2.legend(['stress_percent','stress_percent_cubic',
 		'train_percent','train_percent_cubic'], loc='best')
 	plt.show()
